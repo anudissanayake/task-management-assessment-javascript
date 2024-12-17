@@ -83,10 +83,30 @@ To run this project locally, ensure you have the following installed:
    - Configure `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
 
 4. Run the development server:
+
+   ```
    npm run dev
+   ```
 
 5. Run the test:
+
+   ```
    npm test
+   ```
+
+   Testing Framework: **Jest**
+
+   Test Coverage:
+
+   - Controllers: Validates the behavior of HTTP handlers.
+   - Services: Ensures business logic and interactions with the data layer.
+   - File Operations: Tests file upload and deletion functionality.
+
+   The tests are structured to:
+
+   - Mock Dependencies: External services and database operations are mocked using jest.mock.
+   - Validate Edge Cases: Handles both success and failure scenarios.
+   - Isolate Logic: Each unit of code is tested independently.
 
    ![Test Coverage ](images/test-coverage.png)
 
