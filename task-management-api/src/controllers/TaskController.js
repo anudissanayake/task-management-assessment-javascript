@@ -22,21 +22,22 @@ export class TaskController {
       const { title, description } = req.body;
       const task = new Task(generateId(), title, description);
       if (req.file) {
-      const fileBuffer = req.file.buffer;       // Extract file buffer
-      const fileName = req.file.originalname;   // Extract original file name
-      const mimeType = req.file.mimetype;       // Extract MIME type
+        const fileBuffer = req.file.buffer;       // Extract file buffer
+        const fileName = req.file.originalname;   // Extract original file name
+        const mimeType = req.file.mimetype;       // Extract MIME type
 
-      const fileUrl = await this.fileUploadService.uploadFile(fileBuffer, fileName, mimeType);
-      task.fileUrl = fileUrl;
+        const fileUrl = await this.fileUploadService.uploadFile(fileBuffer, fileName, mimeType);
+        task.fileUrl = fileUrl;
       }
       const createdTask = await this.taskService.createTask(task);
-      if (createdTask.$metadata.httpStatusCode === 200) {
-        res.status(201).json({ success: true, data: task });
-
-      } else {
+      
+      if (createdTask.$metadata.httpStatusCode !== 200) {
         const error = new Error('Failed to create the task');
+        error.statusCode = 500;
         throw error;
       }
+      res.status(201).json({ success: true, data: task });
+
     } catch (error) {
       next(error);
     }

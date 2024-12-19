@@ -25,15 +25,21 @@ export class FileUploadService {
    * @returns {Promise<string>} A promise resolving to the public URL of the uploaded file.
    */
   async uploadFile(file, fileName, mimeType) {
-    const params = {
-      Bucket: bucketName,
-      Key: `${Date.now()}-${fileName}`,
-      Body: file,
-      ContentType: mimeType,
-    };
-    // Upload the file to S3
-    await s3Client.send(new PutObjectCommand(params));
-    return `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${params.Key}`;
+    try {
+      const params = {
+        Bucket: bucketName,
+        Key: `${Date.now()}-${fileName}`,
+        Body: file,
+        ContentType: mimeType,
+      };
+      // Upload the file to S3
+      await s3Client.send(new PutObjectCommand(params));
+      return `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${params.Key}`;
+    } catch (error) {
+      error.message = `File upload failed: ${error.message}`;
+      error.statusCode = 500;
+      throw error;
+    }
   }
 
   /**
@@ -51,6 +57,9 @@ export class FileUploadService {
       console.log(`File with key ${fileKey} deleted successfully`);
     } catch (error) {
       console.error(`Error deleting file with key ${fileKey}:`, error);
+      error.message = `Error deleting file with key ${fileKey}:`;
+      error.statusCode = 500;
+      throw error;
     }
   }
 }
