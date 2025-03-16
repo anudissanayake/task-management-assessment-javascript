@@ -24,12 +24,15 @@ export class FileUploadService {
    * @param {string} mimeType - The MIME type of the file.
    * @returns {Promise<string>} A promise resolving to the public URL of the uploaded file.
    */
-  async uploadFile(file, fileName, mimeType) {
+  async uploadFile(file) {
     try {
+      const fileBuffer = file.buffer;       // Extract file buffer
+      const fileName = file.originalname;   // Extract original file name
+      const mimeType = file.mimetype;       // Extract MIME type
       const params = {
         Bucket: bucketName,
         Key: `${Date.now()}-${fileName}`,
-        Body: file,
+        Body: fileBuffer,
         ContentType: mimeType,
       };
       // Upload the file to S3

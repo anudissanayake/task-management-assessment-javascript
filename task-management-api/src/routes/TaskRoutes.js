@@ -7,9 +7,9 @@ import { FileUploadService } from '../services/FileUploadService.js';
 import { DynamoDBTaskRepository } from '../infrastructure/database/DynamoDBTaskRepository.js';
 import { validateTask, validateUpdateTask } from '../infrastructure/middlewares/ValidateTask.js'
 const dbRepository = new DynamoDBTaskRepository();
-const taskService = new TaskService(dbRepository);
 const fileUploadService = new FileUploadService();
-const taskController = new TaskController(taskService, fileUploadService);
+const taskService = new TaskService(dbRepository, fileUploadService);
+const taskController = new TaskController(taskService);
 
 // Set up multer storage
 const storage = multer.memoryStorage();

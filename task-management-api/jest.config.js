@@ -8,6 +8,7 @@ export default {
     collectCoverage: true,
     collectCoverageFrom: [
       "src/controllers/TaskController.js",
+      "src/services/TaskService.js",
       "src/services/UserExternalApiService.js"
     ],
   };

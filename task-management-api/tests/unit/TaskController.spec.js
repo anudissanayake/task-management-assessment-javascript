@@ -19,7 +19,7 @@ describe('TaskController', () => {
   let next;
 
   beforeEach(() => {
-    taskService = new TaskService(new DynamoDBTaskRepository());
+    taskService = new TaskService(new DynamoDBTaskRepository(), new FileUploadService());
     fileUploadService = new FileUploadService();
 
     taskService.createTask = jest.fn();
@@ -30,7 +30,7 @@ describe('TaskController', () => {
     taskService.deleteTask = jest.fn();
     fileUploadService.deleteFile = jest.fn();
 
-    taskController = new TaskController(taskService, fileUploadService);
+    taskController = new TaskController(taskService);
 
     req = {};
     res = {
@@ -54,39 +54,24 @@ describe('TaskController', () => {
       };
 
       fileUploadService.uploadFile.mockResolvedValue(fileUrl);
-      taskService.createTask.mockResolvedValue({'$metadata': {httpStatusCode: 200}});
-
-      await taskController.createTask(req, res, next);
-
-      expect(fileUploadService.uploadFile).toHaveBeenCalledWith(
-        req.file.buffer,
-        req.file.originalname,
-        req.file.mimetype
-      );
-      expect(taskService.createTask).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: 'Test Task',
-          description: 'Test Description',
-          fileUrl,
-        })
-      );
-      expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ success: true, data: expect.any(Object)});
+      taskService.createTask.mockResolvedValue({
+        "id": "dce95297-c76f-4411-8fc6-376552ee8d6f",
+        "title": "Test Task",
+        "description": "Test Description",
+        "status": "pending",
+        "createdAt": "2025-03-14T18:25:37.441Z",
+        "updatedAt": "2025-03-14T18:25:37.441Z"
     });
 
-    it('should call next with an error on failure', async () => {
-        req.body = { title: 'Test Task', description: 'Test Description' };
+      req = {
+        body: { description: 'Test Description', title: 'Test Task' },
+        file: { buffer: Buffer.from('test file'), mimetype: 'text/plain', originalname: 'file.txt' }
+      };
+      await taskController.createTask(req, res, next);
 
-        taskService.createTask.mockResolvedValue({'$metadata': {httpStatusCode: 500}});
-
-        await taskController.createTask(req, res, next);
-
-        expect(next).toHaveBeenCalledWith(expect.any(Error));
-        const error = next.mock.calls[0][0];
-        expect(error).toBeInstanceOf(Error);
-        expect(error.message).toBe('Failed to create the task');
-        expect(res.status).not.toHaveBeenCalled();
-        expect(res.json).not.toHaveBeenCalled();
+      expect(taskService.createTask).toHaveBeenCalledWith(req.body, req.file);
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith({ success: true, data: expect.any(Object)});
     });
   });
 
@@ -158,11 +143,10 @@ describe('TaskController', () => {
 
   describe('updateTask', () => {
     it('should update a task and return 200', async () => {
-      const existingTask = { id: '1', title: 'Old', description: '', status: 'pending', createdAt: '', updatedAt: '' };
+      const updatedTask = { id: '1', title: 'taskUpdated', description: '', status: 'pending', createdAt: '', updatedAt: '' };
       req.params = { id: '1' };
       req.body = { title: 'New' };
-      taskService.getTaskById.mockResolvedValue(existingTask);
-      taskService.updateTask.mockResolvedValue({'$metadata': {httpStatusCode: 200}});
+      taskService.updateTask.mockResolvedValue(updatedTask);
 
       await taskController.updateTask(req, res, next);
 
@@ -173,26 +157,11 @@ describe('TaskController', () => {
 
   describe('deleteTask', () => {
     it('should delete a task and return 200', async () => {
-      const task = { id: '1', title: 'Test', description: '', status: 'pending', createdAt: '', updatedAt: ''};
       req.params = { id: '1' };
-      taskService.getTaskById.mockResolvedValue(task);
       await taskController.deleteTask(req, res, next);
 
       expect(res.status).toHaveBeenCalledWith(200);
       expect(res.json).toHaveBeenCalledWith({ success: true, message: "Task Deleted successfully" });
     });
-
-    it('should delete a task, delete file in S3 and return 200', async () => {
-        const task = { id: '1', title: 'Test', description: '', status: 'pending', createdAt: '', updatedAt: '', fileUrl: 'http://example.com/file.txt' };
-        req.params = { id: '1' };
-        taskService.getTaskById.mockResolvedValue(task);
-        await taskController.deleteTask(req, res, next);
-  
-        const key = new URL(task.fileUrl).pathname.substring(1);
-        //Delete S3 file
-        expect(fileUploadService.deleteFile).toHaveBeenCalledWith(key);
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(res.json).toHaveBeenCalledWith({ success: true, message: "Task Deleted successfully" });
-      });
   });
 });

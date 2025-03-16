@@ -1,9 +1,11 @@
+import { TaskStatus } from "./TaskStatus.js";
+
 export class Task {
     constructor(
       id,
       title,
       description,
-      status = 'pending',
+      status = TaskStatus.PENDING,
       createdAt = new Date().toISOString(),
       updatedAt = new Date().toISOString(),
       fileUrl
@@ -11,7 +13,7 @@ export class Task {
       this.id = id;
       this.title = title;
       this.description = description;
-      this.status = status;
+      this.status = status || TaskStatus.PENDING;
       this.createdAt = createdAt;
       this.updatedAt = updatedAt;
       this.fileUrl = fileUrl;
