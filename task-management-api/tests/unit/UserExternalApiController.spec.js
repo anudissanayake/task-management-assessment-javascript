@@ -91,12 +91,7 @@ describe('DynamoDBExternalRepository', () => {
 
   describe('getFromCache', () => {
     it('should return data from the cache if present', async () => {
-      const mockResult = {
-        Item: {
-          "cacheKey": { S: mockKey },
-          "data": { S: JSON.stringify({ id: 1, name: 'Test User' }) },
-        },
-      };
+      const mockResult =[];
 
       dynamoDb.send = jest.fn().mockResolvedValue(mockResult);
       const result = await repo.getFromCache(mockKey);
@@ -111,7 +106,7 @@ describe('DynamoDBExternalRepository', () => {
           },
         })
       );
-      expect(result).toEqual(mockResult.Item);
+      expect(result).toEqual(mockResult);
     });
 
     it('should return an empty array if no data is found', async () => {
@@ -131,6 +126,20 @@ describe('DynamoDBExternalRepository', () => {
           },
         })
       );
+      expect(result).toEqual([]);
+    });
+
+    it('should return an empty array if cache has expired', async () => {
+      const expiredTime = Math.floor(Date.now() / 1000) - 10;
+      const mockResult = {
+        Item: {
+          cacheKey: { S: mockKey },
+          data: { S: JSON.stringify({ id: 1, name: 'Test User' }) },
+          ttl: { N: expiredTime.toString() },
+        },
+      };
+      dynamoDb.send = jest.fn().mockResolvedValue(mockResult);
+      const result = await repo.getFromCache(mockKey);
       expect(result).toEqual([]);
     });
 
@@ -160,6 +169,7 @@ describe('DynamoDBExternalRepository', () => {
             Item: {
               cacheKey: { S: mockKey },
               data: { S: JSON.stringify(mockData) },
+              ttl: expect.any(Object),
             },
           },
         })

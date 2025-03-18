@@ -39,7 +39,6 @@ export class TaskService {
     const updatedTask = {
       ...taskExist,
       ...taskData,
-      updatedAt: new Date().toISOString(),
       status: taskData.status || taskExist.status,
     };
     const updated = await this.dbRepository.update(updatedTask); // Calls the repository method to update the task

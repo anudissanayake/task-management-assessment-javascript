@@ -76,9 +76,9 @@ describe('TaskService', () => {
   describe('updateTask', () => {
     it('should update an existing task', async () => {
       const uuid = '1';
-      const existingTask = { id: uuid, title: 'Old', description: '' };
+      const existingTask = { id: uuid, title: 'Old', description: '', status: 'pending' };
       const updatedData = { title: 'New' };
-      const updatedTask = { ...existingTask, ...updatedData, updatedAt: expect.any(String) };
+      const updatedTask = { ...existingTask, ...updatedData,  };
       dbRepository.findById.mockResolvedValue(existingTask);
       dbRepository.update.mockResolvedValue({ $metadata: { httpStatusCode: 200 } });
 

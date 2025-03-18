@@ -12,14 +12,15 @@ export class UserExternalApiService {
   fetchUsers = async () => {
     const cacheKey = 'users'; // Cache key
 
-    // Check if data is cached
-    const cachedData = await this.dbRepository.getFromCache(cacheKey);
-    if (Array.isArray(cachedData) && cachedData.length !== 0) {
-      return cachedData;
-    }
-
-    // If not cached, fetch from the external API
     try {
+      // Try to get data from cache
+      const cachedData = await this.dbRepository.getFromCache(cacheKey);
+      if (Array.isArray(cachedData) && cachedData.length > 0) {
+        console.log('Returning cached user data');
+        return cachedData;
+      }
+
+      console.log('Fetching fresh user data from external API');
       const response = await axios.get(API_URL);
       const users = response.data;
 
@@ -28,12 +29,8 @@ export class UserExternalApiService {
       return users;
 
     } catch (error) {
-      if (error && error.message) {
-        console.error(`Error fetching data from external API: ${error.message}`, error);
-      } else {
-        console.error(`An unknown error occurred:`, error);
-      }
-      throw error;
+      console.error(`Error in fetchUsers: ${error.message}`, error);
+      throw new Error(`Failed to fetch users: ${error.message}`);
     }
   };
 }
